@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Real-time packet capture using Scapy + feature extraction for IoT-23 dataset
-Sends predictions to Flask backend running on localhost:5000
+Updated real-time packet capture with backend integration
+Now sends predictions to Flask backend via /predict-rt endpoint
 """
 
 import json
@@ -10,6 +10,7 @@ from scapy.all import sniff, IP, TCP, UDP, ICMP
 import requests
 from datetime import datetime
 import sys
+import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,11 +18,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger('realtime-ids')
 
-BACKEND_URL = 'http://127.0.0.1:5000/predict'
-INTERFACE = 'eth0'  # Change to your interface (or 'any' for all)
+BACKEND_URL = 'http://127.0.0.1:5000/predict-rt'
+INTERFACE = 'eth0'
 
 def extract_features(pkt):
-    """Extract IoT-23 features from a packet"""
+    """Extract features from a packet"""
     features = {
         'timestamp': datetime.now().isoformat(),
         'proto': 0,
@@ -58,7 +59,7 @@ def packet_callback(pkt):
     try:
         features = extract_features(pkt)
         
-        # Send to backend for prediction
+        # Send to backend for real-time prediction
         response = requests.post(
             BACKEND_URL,
             json=features,
@@ -68,28 +69,30 @@ def packet_callback(pkt):
         if response.status_code == 200:
             result = response.json()
             
-            # Log prediction
             prediction = result.get('prediction', 'UNKNOWN')
             confidence = result.get('confidence', 0.0)
             threat_level = result.get('threat_level', 'UNKNOWN')
             
-            if prediction == 'Anomaly':
+            if prediction == 'Risk':
                 logger.warning(
-                    f'🚨 ANOMALY DETECTED: '
-                    f'{features["src"]}:{features["sport"]} → {features["dst"]}:{features["dport"]} | '
+                    f'🚨 ANOMALY: {features["src"]}:{features["sport"]} → '
+                    f'{features["dst"]}:{features["dport"]} | '
                     f'Confidence: {confidence:.2%} | Threat: {threat_level}'
                 )
             else:
                 logger.info(
-                    f'✓ Normal: {features["src"]}:{features["sport"]} → {features["dst"]}:{features["dport"]}'
+                    f'✓ Normal: {features["src"]}:{features["sport"]} → '
+                    f'{features["dst"]}:{features["dport"]}'
                 )
         else:
             logger.error(f'Backend error: {response.status_code}')
     
+    except requests.exceptions.Timeout:
+        pass  # Silently skip timeouts for performance
     except requests.exceptions.RequestException as e:
         logger.error(f'Connection error: {e}')
     except Exception as e:
-        logger.error(f'Error processing packet: {e}')
+        logger.error(f'Error: {e}')
 
 def main():
     logger.info(f'Starting real-time capture on {INTERFACE}...')
@@ -101,12 +104,12 @@ def main():
             iface=INTERFACE,
             prn=packet_callback,
             store=False,
-            filter='tcp or udp or icmp',  # Filter only these protocols
+            filter='tcp or udp or icmp',
         )
     except KeyboardInterrupt:
-        logger.info('Stopping capture...')
+        logger.info('Stopping capture.')
     except PermissionError:
-        logger.error('❌ You need root/sudo privileges to capture packets!')
+        logger.error('❌ You need root/sudo privileges!')
         sys.exit(1)
 
 if __name__ == '__main__':
