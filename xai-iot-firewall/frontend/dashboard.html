@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI IoT Firewall - Real-time Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1c2333;
+            --border: #2a3347;
+            --accent: #00d4ff;
+            --accent2: #7c3aed;
+            --safe: #10b981;
+            --risk: #ef4444;
+            --text: #e2e8f0;
+            --muted: #64748b;
+        }
+
+        html, body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
+            border-bottom: 1px solid var(--border);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #e2e8f0, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-card.high .stat-value {
+            color: var(--risk);
+        }
+
+        .stat-card.medium .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.low .stat-value {
+            color: var(--safe);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .alerts-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .alerts-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alerts-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .alert-item {
+            background: var(--surface2);
+            border-left: 4px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .alert-item.risk {
+            border-left-color: var(--risk);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .alert-item.safe {
+            border-left-color: var(--safe);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .alert-src {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+        }
+
+        .alert-time {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-badge.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--risk);
+        }
+
+        .status-badge.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-badge.low {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--safe);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Real-time IoT Firewall Dashboard</h1>
+        <p>Live threat detection &amp; analysis</p>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Alerts</div>
+                <div class="stat-value" id="totalAlerts">0</div>
+            </div>
+            <div class="stat-card high">
+                <div class="stat-label">High Threat</div>
+                <div class="stat-value" id="highThreat">0</div>
+            </div>
+            <div class="stat-card medium">
+                <div class="stat-label">Medium Threat</div>
+                <div class="stat-value" id="mediumThreat">0</div>
+            </div>
+            <div class="stat-card low">
+                <div class="stat-label">Low Threat</div>
+                <div class="stat-value" id="lowThreat">0</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Threat Distribution</div>
+                <canvas id="threatChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Predictions Breakdown</div>
+                <canvas id="predictionsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Alerts Feed -->
+        <div class="alerts-section">
+            <div class="alerts-header">
+                <span class="spinner"></span>
+                Real-time Alert Feed
+            </div>
+            <div class="alerts-feed" id="alertsFeed">
+                <div style="color: var(--muted); text-align: center; padding: 20px;">
+                    Waiting for alerts...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        let threatChart, predictionsChart;
+        let alertsData = [];
+
+        async function fetchSummary() {
+            try {
+                const res = await fetch(`${API_BASE}/summary`);
+                const data = await res.json();
+                updateStats(data);
+            } catch (err) {
+                console.error('Failed to fetch summary:', err);
+            }
+        }
+
+        async function fetchAlerts() {
+            try {
+                const res = await fetch(`${API_BASE}/alerts?limit=50`);
+                const data = await res.json();
+                alertsData = data.alerts || [];
+                renderAlerts();
+            } catch (err) {
+                console.error('Failed to fetch alerts:', err);
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalAlerts').textContent = data.total_alerts || 0;
+            document.getElementById('highThreat').textContent = data.high_threat || 0;
+            document.getElementById('mediumThreat').textContent = data.medium_threat || 0;
+            document.getElementById('lowThreat').textContent = data.low_threat || 0;
+
+            updateCharts(data);
+        }
+
+        function updateCharts(data) {
+            const threatCtx = document.getElementById('threatChart').getContext('2d');
+            const predictionsCtx = document.getElementById('predictionsChart').getContext('2d');
+
+            if (threatChart) threatChart.destroy();
+            if (predictionsChart) predictionsChart.destroy();
+
+            threatChart = new Chart(threatCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [data.high_threat || 0, data.medium_threat || 0, data.low_threat || 0],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                        borderColor: '#111827',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#e2e8f0', font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+
+            predictionsChart = new Chart(predictionsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Anomalies', 'Normal'],
+                    datasets: [{
+                        data: [data.total_anomalies || 0, (data.total_alerts - (data.total_anomalies || 0)) || 0],
+                        backgroundColor: ['#ef4444', '#10b981'],
+                        borderColor: '#111827',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#e2e8f0', font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderAlerts() {
+            const feed = document.getElementById('alertsFeed');
+            if (alertsData.length === 0) {
+                feed.innerHTML = '<div style="color: var(--muted); text-align: center; padding: 20px;">No alerts yet</div>';
+                return;
+            }
+
+            feed.innerHTML = alertsData.slice(0, 20).map(alert => {
+                const isRisk = alert.prediction === 'Risk';
+                const threatClass = alert.threat_level?.toLowerCase() || 'low';
+                const time = new Date(alert.created_at).toLocaleTimeString();
+                
+                return `
+                    <div class="alert-item ${isRisk ? 'risk' : 'safe'}">
+                        <div>
+                            <span class="alert-src">${alert.src_ip}:${alert.src_port}</span>
+                            → 
+                            <span class="alert-src">${alert.dst_ip}:${alert.dst_port}</span>
+                            <span class="status-badge ${threatClass}">${alert.threat_level}</span>
+                        </div>
+                        <div class="alert-time">${time}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initial load
+        fetchSummary();
+        fetchAlerts();
+
+        // Auto-refresh every 3 seconds
+        setInterval(() => {
+            fetchSummary();
+            fetchAlerts();
+        }, 3000);
+    </script>
+</body>
+</html>
