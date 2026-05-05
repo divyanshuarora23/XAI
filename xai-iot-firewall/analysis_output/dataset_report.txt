@@ -1,0 +1,117 @@
+=================================================================
+  DATASET ANALYSIS REPORT
+  Project : XAI-Powered Secure IoT Firewall
+  Dataset : IoT-23 (Cleaned)
+=================================================================
+
+1. DATASET FILES
+----------------------------------------
+  File       : cleaned_data.csv
+  Total rows : 48,003
+  Normal     : 26,001
+  Attack     : 22,002
+  Attack %   : 45.8%
+
+  File       : iot23_combined.csv
+  Total rows : 1,446,621
+  Normal     : 53,481
+  Attack     : 1,393,140
+  Attack %   : 96.3%
+
+2. COMBINED RAW DATASET
+----------------------------------------
+  Total rows      : 1,494,624
+  Total features  : 26
+  Normal samples  : 79,482  (5.32%)
+  Attack samples  : 1,415,142  (94.68%)
+  Imbalance ratio : 17.80x  (attack:normal)
+
+3. ATTACK TYPE BREAKDOWN
+----------------------------------------
+  PartOfAHorizontalPortScan                      838,308  (59.2%)
+  Okiru                                          262,853  (18.6%)
+  -   Benign   -                                 146,275  (10.3%)
+  DDoS                                           138,813  (9.8%)
+  C&C                                             20,718  (1.5%)
+  Attack                                           7,729  (0.5%)
+  C&C-HeartBeat                                      349  (0.0%)
+  C&C-FileDownload                                    43  (0.0%)
+  C&C-Torii                                           30  (0.0%)
+  FileDownload                                        15  (0.0%)
+  C&C-HeartBeat-FileDownload                           8  (0.0%)
+  C&C-Mirai                                            1  (0.0%)
+
+4. BALANCING STRATEGY
+----------------------------------------
+  Method          : Random undersampling of majority class
+  Justification   : Preserves real data, no synthetic samples —
+                    safer and more honest for security research
+  Target per class: 79,482
+  Final Normal    : 79,482
+  Final Attack    : 79,482
+  Final Total     : 158,964
+  Balance ratio   : 1:1  (50% normal / 50% attack)
+
+5. FEATURE STATISTICS
+----------------------------------------
+  Feature                                   Mean        Std        Min        Max  Missing%
+------------------------------------------------------------------------------------------
+  ts                                  1543353007.928 11130173.739 1525879831.015 1569018214.467     3.21%
+  orig_ip_bytes                        14925.057 3961761.710      0.000 1914793266.000     0.00%
+  orig_bytes                            5278.711 2384176.116     -1.000 1744830458.000     0.00%
+  resp_ip_bytes                          529.383 404709.525      0.000 349618679.000     0.00%
+  resp_bytes                             494.671 389539.355     -1.000 336516351.000     0.00%
+  orig_pkts                              342.960 100530.247      0.000 66027354.000     0.00%
+  Unnamed: 0                           48624.428  29403.737      0.000  99998.000     3.21%
+  resp_pkts                                0.581    278.035      0.000 239484.000     0.00%
+  duration                                 0.981    172.941     -1.000  78840.329     0.00%
+  missed_bytes                             0.406     59.902      0.000  20272.000     0.00%
+  conn_state_S0                            0.895      0.307      0.000      1.000     0.00%
+  conn_state_OTH                           0.079      0.270      0.000      1.000     0.00%
+  proto_tcp                                0.957      0.204      0.000      1.000     0.00%
+  proto_udp                                0.041      0.197      0.000      1.000     0.00%
+  conn_state_SF                            0.018      0.134      0.000      1.000     0.00%
+  conn_state_REJ                           0.004      0.059      0.000      1.000     0.00%
+  conn_state_S3                            0.003      0.057      0.000      1.000     0.00%
+  proto_icmp                               0.003      0.053      0.000      1.000     0.00%
+  conn_state_RSTR                          0.001      0.028      0.000      1.000     0.00%
+  conn_state_RSTO                          0.000      0.014      0.000      1.000     0.00%
+  conn_state_SH                            0.000      0.009      0.000      1.000     0.00%
+  conn_state_S1                            0.000      0.008      0.000      1.000     0.00%
+  conn_state_S2                            0.000      0.006      0.000      1.000     0.00%
+  conn_state_RSTOS0                        0.000      0.005      0.000      1.000     0.00%
+  conn_state_SHR                           0.000      0.004      0.000      1.000     0.00%
+  conn_state_RSTRH                         0.000      0.002      0.000      1.000     0.00%
+
+6. PCA VARIANCE EXPLAINED
+----------------------------------------
+  PC1  : 24.52%
+  PC2  : 10.95%
+  Total: 35.46%  (2 components)
+
+7. OUTPUT FILES
+----------------------------------------
+  01_raw_class_distribution.png      Raw Normal vs Attack (bar + pie)
+  02_per_file_distribution.png       Class split per input file
+  03_feature_correlation_heatmap.png Correlation between all features
+  04_feature_distributions.png       Feature histograms: Normal vs Attack
+  05_balanced_class_distribution.png Post-balancing split (50/50)
+  06_pca_visualization.png           2D PCA scatter of traffic samples
+  07_attack_type_breakdown.png       Count of each attack type
+  balanced_dataset.csv               Ready-to-train balanced dataset
+
+=================================================================
+  CONCLUSION & RECOMMENDATION FOR RESEARCH MENTOR
+=================================================================
+  The raw IoT-23 dataset contains 1,494,624 samples with a significant
+  class imbalance (17.8x more attacks than normal traffic).
+  Training on this raw data would bias the model towards always
+  predicting attacks, reducing its practical usefulness.
+
+  After applying random undersampling, the dataset is balanced
+  at 79,482 samples per class, giving a perfect 1:1 ratio.
+  This ensures the CNN-BiLSTM model learns both normal and
+  attack traffic patterns equally well.
+
+  The balanced_dataset.csv is recommended for model training.
+=================================================================
