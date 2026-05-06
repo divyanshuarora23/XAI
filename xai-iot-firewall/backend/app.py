@@ -16,7 +16,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
-# Make model/ importable
+# Make backend/ and model/ importable
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'model'))
 
 from predict import Predictor
