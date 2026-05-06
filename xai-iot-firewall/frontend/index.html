@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         /* ── Reset & tokens ───────────────────────────────────────────────── */
         *,
@@ -59,7 +60,7 @@
         .wrapper {
             position: relative;
             z-index: 1;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 48px 24px 80px;
         }
@@ -200,7 +201,7 @@
             cursor: not-allowed;
         }
 
-        /* ── Loader ───────────────────────────────────────────────────────── */
+        /* ── Loader ──────────────────────────────────────────────────────── */
         .loader-wrap {
             display: none;
             text-align: center;
@@ -410,7 +411,228 @@
             display: block;
         }
 
-        /* ── Footer ───────────────────────────────────────────────────────── */
+        /* ── Real-time dashboard ─────────────────────────────────────────── */
+        .dashboard-wrap {
+            margin-top: 48px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dashboard-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--safe);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: var(--mono);
+        }
+
+        .status-badge.live::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--safe);
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            position: relative;
+            height: 320px;
+        }
+
+        .alerts-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .alerts-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alerts-header h2 {
+            font-size: 16px;
+        }
+
+        .refresh-time {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .alerts-feed {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .alert-item:hover {
+            background: var(--surface2);
+        }
+
+        .alert-info {
+            flex: 1;
+        }
+
+        .alert-flow {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .alert-threat {
+            display: inline-block;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .threat-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .threat-medium {
+            background: rgba(251, 146, 60, 0.2);
+            color: #fed7aa;
+        }
+
+        .threat-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #bbf7d0;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .no-alerts {
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tab:hover {
+            background: var(--surface2);
+        }
+
+        /* ── Footer ──────────────────────────────────────────────────────── */
         footer {
             text-align: center;
             margin-top: 60px;
@@ -506,10 +728,65 @@
 
         </div><!-- /results -->
 
+        <!-- Real-time dashboard -->
+        <section class="dashboard-wrap">
+            <div class="dashboard-header">
+                <div class="dashboard-title">📡 Live Traffic Dashboard</div>
+                <div class="status-badge live">● LIVE</div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="stat-label">Total Alerts</div>
+                    <div class="stat-value" id="total-alerts">0</div>
+                </div>
+                <div class="card">
+                    <div class="stat-label">High Threat</div>
+                    <div class="stat-value" style="color: var(--risk);" id="high-threat">0</div>
+                </div>
+                <div class="card">
+                    <div class="stat-label">Medium Threat</div>
+                    <div class="stat-value" style="color: #fb923c;" id="medium-threat">0</div>
+                </div>
+                <div class="card">
+                    <div class="stat-label">Anomalies Detected</div>
+                    <div class="stat-value" style="color: var(--accent);" id="anomalies">0</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-card">
+                    <canvas id="threat-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <canvas id="prediction-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="alerts-section">
+                <div class="alerts-header">
+                    <h2>📡 Recent Alerts</h2>
+                    <div class="refresh-time">
+                        Last updated: <span id="last-update">--:--:--</span>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <div class="tab active" onclick="filterAlerts('all', event)">All</div>
+                    <div class="tab" onclick="filterAlerts('high', event)">🔴 High</div>
+                    <div class="tab" onclick="filterAlerts('medium', event)">🟠 Medium</div>
+                    <div class="tab" onclick="filterAlerts('low', event)">🟢 Low</div>
+                </div>
+                <div class="alerts-feed" id="alerts-feed">
+                    <div class="no-alerts">No alerts yet. Waiting for traffic...</div>
+                </div>
+            </div>
+        </section>
+
         <footer>CNN-BiLSTM · SHAP · LIME · UNSW-NB15 · IoT-23</footer>
 
     </div><!-- /wrapper -->
 
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
         const fileInput = document.getElementById('file-input');
         const dropzone = document.getElementById('dropzone');
@@ -519,9 +796,14 @@
         const errorBanner = document.getElementById('error-banner');
         const results = document.getElementById('results');
 
-        const API = 'http://localhost:5000/predict';   // ← update if backend is hosted elsewhere
+        const API = 'http://localhost:5000/predict';
+        const SOCKET_URL = 'http://localhost:5000';
 
-        // ── File selection ──────────────────────────────────────────────────────
+        let threatChart, predictionChart;
+        let currentFilter = 'all';
+        let allAlerts = [];
+
+        // ── File selection ─────────────────────────────────────────────────
         fileInput.addEventListener('change', () => {
             const f = fileInput.files[0];
             if (f) {
@@ -544,7 +826,7 @@
             }
         });
 
-        // ── Analyze ─────────────────────────────────────────────────────────────
+        // ── Analyze ───────────────────────────────────────────────────────
         analyzeBtn.addEventListener('click', async () => {
             const file = fileInput.files[0];
             if (!file) return;
@@ -574,12 +856,11 @@
             }
         });
 
-        // ── Render ───────────────────────────────────────────────────────────────
+        // ── Render ───────────────────────────────────────────────────────
         function _renderResults(data) {
             const isRisk = data.label === 'Risk';
             const pct = Math.round(data.confidence * 100);
 
-            // Verdict card
             const card = document.getElementById('verdict-card');
             card.className = `verdict-card ${isRisk ? 'risk' : 'safe'}`;
             document.getElementById('verdict-icon').textContent = isRisk ? '🚨' : '✅';
@@ -587,7 +868,6 @@
             document.getElementById('verdict-meta').textContent =
                 `Confidence: ${pct}%  ·  ${isRisk ? 'Malicious network activity detected' : 'No threats detected'}`;
 
-            // Confidence bar
             const confSect = document.getElementById('conf-section');
             confSect.className = `conf-section ${isRisk ? 'risk' : 'safe'}`;
             setTimeout(() => {
@@ -595,7 +875,6 @@
                 document.getElementById('conf-value').textContent = `${pct}%`;
             }, 100);
 
-            // Charts
             document.getElementById('shap-img').src = `data:image/png;base64,${data.shap.plot_base64}`;
             document.getElementById('lime-img').src = `data:image/png;base64,${data.lime.plot_base64}`;
 
@@ -604,7 +883,141 @@
             results.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────────────
+        // ── Real-time dashboard (WebSocket) ───────────────────────────────
+        function initCharts() {
+            const ctx1 = document.getElementById('threat-chart').getContext('2d');
+            threatChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#ef4444', '#fb923c', '#22c55e'],
+                        borderColor: '#111827',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#e2e8f0', font: { size: 12 } } }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('prediction-chart').getContext('2d');
+            predictionChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Risk', 'Safe'],
+                    datasets: [{
+                        label: 'Predictions',
+                        data: [0, 0],
+                        backgroundColor: ['#ef4444', '#10b981'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { labels: { color: '#e2e8f0' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#64748b' }, grid: { color: '#2a3347' } }
+                    }
+                }
+            });
+        }
+
+        function updateSummary(summary) {
+            document.getElementById('total-alerts').textContent = summary.total_alerts || 0;
+            document.getElementById('high-threat').textContent = summary.high_threat || 0;
+            document.getElementById('medium-threat').textContent = summary.medium_threat || 0;
+            document.getElementById('anomalies').textContent = summary.total_anomalies || 0;
+
+            threatChart.data.datasets[0].data = [
+                summary.high_threat || 0,
+                summary.medium_threat || 0,
+                summary.low_threat || 0
+            ];
+            threatChart.update();
+
+            predictionChart.data.datasets[0].data = [
+                summary.total_anomalies || 0,
+                (summary.total_alerts || 0) - (summary.total_anomalies || 0)
+            ];
+            predictionChart.update();
+        }
+
+        function renderAlerts() {
+            const feed = document.getElementById('alerts-feed');
+            let filtered = allAlerts;
+
+            if (currentFilter !== 'all') {
+                filtered = allAlerts.filter(a => a.threat_level?.toUpperCase() === currentFilter.toUpperCase());
+            }
+
+            if (filtered.length === 0) {
+                feed.innerHTML = '<div class="no-alerts">No alerts in this category</div>';
+                return;
+            }
+
+            feed.innerHTML = filtered.map(alert => `
+                <div class="alert-item">
+                    <div class="alert-info">
+                        <div class="alert-flow">${alert.src_ip}:${alert.src_port} → ${alert.dst_ip}:${alert.dst_port}</div>
+                        <span class="alert-threat threat-${alert.threat_level?.toLowerCase() || 'low'}">
+                            ${alert.threat_level} THREAT
+                        </span>
+                    </div>
+                    <div class="alert-time">${new Date(alert.created_at).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function filterAlerts(level, event) {
+            currentFilter = level;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderAlerts();
+        }
+
+        function initSocket() {
+            const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+
+            socket.on('connect', () => {
+                console.log('Connected to realtime server');
+            });
+
+            socket.on('initial_data', (payload) => {
+                if (payload.summary) {
+                    updateSummary(payload.summary);
+                }
+                if (payload.alerts) {
+                    allAlerts = payload.alerts;
+                    renderAlerts();
+                }
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+            });
+
+            socket.on('new_alert', (alert) => {
+                allAlerts = [alert, ...allAlerts].slice(0, 50);
+                renderAlerts();
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+            });
+
+            socket.on('summary_update', (payload) => {
+                if (payload.summary) {
+                    updateSummary(payload.summary);
+                }
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+            });
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────
         function _setLoading(on) {
             loader.classList.toggle('active', on);
             analyzeBtn.disabled = on;
@@ -620,6 +1033,10 @@
             if (b < 1048576) return `${(b / 1024).toFixed(1)} KB`;
             return `${(b / 1048576).toFixed(1)} MB`;
         }
+
+        // Initialize
+        initCharts();
+        initSocket();
     </script>
 </body>
 
