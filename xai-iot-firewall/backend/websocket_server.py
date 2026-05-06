@@ -78,10 +78,17 @@ def init_socketio(app):
         socketio.emit('new_alert', alert_data, broadcast=True)
         logger.info(f'📢 Alert broadcasted to {len(connected_clients)} clients')
 
+   def broadcast_alert(alert_data):
+        """Broadcast new alert to all connected clients"""
+        # FIX: Remove broadcast=True. socketio.emit() broadcasts by default.
+        socketio.emit('new_alert', alert_data) 
+        logger.info(f'📢 Alert broadcasted to {len(connected_clients)} clients')
+
     def broadcast_summary_update():
         """Broadcast summary update"""
         summary = get_alerts_summary()
-        socketio.emit('summary_update', {'summary': summary}, broadcast=True)
+        # FIX: Remove broadcast=True
+        socketio.emit('summary_update', {'summary': summary})
 
     return socketio, broadcast_alert, broadcast_summary_update
 
