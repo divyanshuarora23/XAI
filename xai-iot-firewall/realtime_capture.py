@@ -44,7 +44,7 @@ def extract_features(pkt):
     if TCP in pkt:
         features['sport'] = pkt[TCP].sport
         features['dport'] = pkt[TCP].dport
-        features['flags'] = pkt[TCP].flags
+        features['flags'] = int(pkt[TCP].flags)
     elif UDP in pkt:
         features['sport'] = pkt[UDP].sport
         features['dport'] = pkt[UDP].dport
