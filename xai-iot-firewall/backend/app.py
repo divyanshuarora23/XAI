@@ -20,7 +20,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'model'))
 
 from predict import Predictor
-from parsers import parse_file
+from backend.parsers import parse_file
 from backend.database import (
     init_db, add_alert, get_recent_alerts, 
     get_alerts_summary, update_statistics
@@ -75,7 +75,7 @@ class RealtimePredictor:
 
 rt_predictor = RealtimePredictor()
 
-# ── Routes ─────────────────────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -206,9 +206,9 @@ def index():
 
 if __name__ == '__main__':
     print("""
-    ╔═══════════════════════════════════════════════════════════════╗
+    ╔═══════════════════════════════════════════════════════════════
     ║     XAI IoT Firewall - Real-time IDS Dashboard               ║
-    ╚═══════════════════════════════════════════════════════════════╝
+    ╚═══════════════════════════════════════════════════════════════
     
     🌐 Web UI:        http://localhost:5000/frontend/index.html
     📊 Dashboard:     http://localhost:5000/frontend/dashboard.html
